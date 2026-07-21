@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Memory Card Game</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #f5f5f5;
+    }
+
+    h1 {
+      margin-top: 20px;
+    }
+
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(4, 100px);
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .game-board {
+        grid-template-columns: repeat(2, 100px);
+      }
+    }
+
+    .card {
+      width: 100px;
+      height: 120px;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.5s;
+    }
+
+    .card.flip .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 30px;
+      backface-visibility: hidden;
+    }
+
+    .card-front {
+      background: #ccc;
+    }
+
+    .card-back {
+      background: #4CAF50;
+      color: white;
+      transform: rotateY(180deg);
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Memory Card Game</h1>
+<p>Số lượt: <span id="moves">0</span></p>
+
+<div class="game-board" id="gameBoard"></div>
+
+<button onclick="resetGame()">Chơi lại</button>
+
+<script>
+  const symbols = ['🍎','🍌','🍇','🍉'];
+  let cards = [...symbols, ...symbols];
+
+  let firstCard = null;
+  let secondCard = null;
+  let lockBoard = false;
+  let moves = 0;
+  let matched = 0;
+
+  function shuffle(array) {
+    return array.sort(() => 0.5 - Math.random());
+  }
+
+  function createBoard() {
+    const board = document.getElementById("gameBoard");
+    board.innerHTML = "";
+    cards = shuffle(cards);
+
+    cards.forEach(symbol => {
+      const card = document.createElement("div");
+      card.classList.add("card");
+
+      card.innerHTML = `
+        <div class="card-inner">
+          <div class="card-front">?</div>
+          <div class="card-back">${symbol}</div>
+        </div>
+      `;
+
+      card.addEventListener("click", () => flipCard(card, symbol));
+      board.appendChild(card);
+    });
+  }
+
+  function flipCard(card, symbol) {
+    if (lockBoard || card.classList.contains("flip")) return;
+
+    card.classList.add("flip");
+
+    if (!firstCard) {
+      firstCard = { card, symbol };
+      return;
+    }
+
+    secondCard = { card, symbol };
+    moves++;
+    document.getElementById("moves").innerText = moves;
+
+    checkMatch();
+  }
+
+  function checkMatch() {
+    if (firstCard.symbol === secondCard.symbol) {
+      matched += 2;
+      resetTurn();
+
+      if (matched === 8) {
+        setTimeout(() => alert("🎉 Bạn thắng!"), 300);
+      }
+      } else {
+      lockBoard = true;
+      setTimeout(() => {
+        firstCard.card.classList.remove("flip");
+        secondCard.card.classList.remove("flip");
+        resetTurn();
+      }, 800);
+    }
+  }
+
+  function resetTurn() {
+    [firstCard, secondCard, lockBoard] = [null, null, false];
+  }
+
+  function resetGame() {
+    moves = 0;
+    matched = 0;
+    document.getElementById("moves").innerText = 0;
+    cards = [...symbols, ...symbols];
+    createBoard();
+  }
+
+  createBoard();
+</script>
+
+</body>
+</html>
